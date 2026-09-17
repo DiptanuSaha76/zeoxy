@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Aurora } from "@/components/Aurora";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 
 const ACCOUNT_DOMAIN = "moobit.app";
 
@@ -214,13 +214,6 @@ function AuthPage() {
           className="brand-gradient mt-3 w-full rounded-2xl py-3.5 font-display text-sm font-semibold text-ink disabled:opacity-50"
         >
           {mode === "signin" ? "Log in" : "Create account"}
-        </button>
-
-        <button
-          onClick={google}
-          className="glass-panel mt-2.5 w-full rounded-2xl py-3.5 font-display text-sm font-medium"
-        >
-          Continue with Google
         </button>
       </div>
     </div>
