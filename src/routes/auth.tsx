@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -11,7 +11,10 @@ const credsSchema = z.object({
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
 });
 
+const searchSchema = z.object({ redirect: z.string().optional() });
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Sign in — Recharge" },
