@@ -152,8 +152,40 @@ function GamesTab() {
   const { data: games = [] } = useQuery(gamesQuery({ includeInactive: true }));
   const [form, setForm] = useState<GameForm>({ ...emptyGame });
   const [editing, setEditing] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const set = <K extends keyof GameForm>(k: K, v: GameForm[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  async function toggleActive(g: Game) {
+    const { error } = await supabase
+      .from("games")
+      .update({ is_active: !g.is_active })
+      .eq("id", g.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(g.is_active ? "Game hidden from the store" : "Game is now live");
+    qc.invalidateQueries({ queryKey: ["games"] });
+  }
+
+  async function remove(g: Game) {
+    if (!window.confirm(`Delete "${g.name}" and all of its recharge packs? This cannot be undone.`))
+      return;
+    const { error } = await supabase.from("games").delete().eq("id", g.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (editing === g.id) {
+      setEditing(null);
+      setForm({ ...emptyGame });
+    }
+    toast.success("Game deleted");
+    qc.invalidateQueries({ queryKey: ["games"] });
+    qc.invalidateQueries({ queryKey: ["packages"] });
+    qc.invalidateQueries({ queryKey: ["banners"] });
+  }
 
   async function save() {
     if (!form.name.trim() || !form.slug.trim()) {
@@ -218,7 +250,49 @@ function GamesTab() {
           <label><Label>Slug</Label><input className={field} value={form.slug} onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))} /></label>
           <label><Label>Category</Label><input className={field} value={form.category} onChange={(e) => set("category", e.target.value)} /></label>
           <label><Label>Currency label</Label><input className={field} value={form.currency_label} onChange={(e) => set("currency_label", e.target.value)} /></label>
-          <label className="sm:col-span-2"><Label>Cover image URL</Label><input className={field} value={form.cover_url} onChange={(e) => set("cover_url", e.target.value)} /></label>
+          <div className="sm:col-span-2">
+            <Label>Cover image</Label>
+            <div className="flex items-center gap-3">
+              {form.cover_url ? (
+                <img
+                  src={form.cover_url}
+                  alt="Cover preview"
+                  className="size-16 shrink-0 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="size-16 shrink-0 rounded-xl bg-muted" />
+              )}
+              <div className="min-w-0 flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    setUploading(true);
+                    try {
+                      const url = await uploadGameImage(file);
+                      set("cover_url", url);
+                      toast.success("Image uploaded");
+                    } catch {
+                      toast.error("Could not upload that image");
+                    }
+                    setUploading(false);
+                  }}
+                  className="w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-xs"
+                />
+                <input
+                  className={`${field} mt-2`}
+                  value={form.cover_url}
+                  onChange={(e) => set("cover_url", e.target.value)}
+                  placeholder="…or paste an image link"
+                />
+              </div>
+            </div>
+            {uploading ? <p className="mt-1 text-[11px] text-faint">Uploading…</p> : null}
+          </div>
           <label><Label>ID field label</Label><input className={field} value={form.id_label} onChange={(e) => set("id_label", e.target.value)} /></label>
           <label>
             <Label>ID type</Label>
@@ -251,8 +325,17 @@ function GamesTab() {
                 {g.requires_server_id ? " + server" : ""} {g.is_active ? "" : "· hidden"}
               </p>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2">
               <button className={btn} onClick={() => edit(g)}>Edit</button>
+              <button className={btn} onClick={() => toggleActive(g)}>
+                {g.is_active ? "Deactivate" : "Activate"}
+              </button>
+              <button
+                className={`${btn} border-rose/40 text-rose`}
+                onClick={() => remove(g)}
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
