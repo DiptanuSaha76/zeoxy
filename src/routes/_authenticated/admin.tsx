@@ -12,6 +12,8 @@ import {
   money,
   ordersQuery,
   packsQuery,
+  settingsQuery,
+  uploadGameImage,
   type Banner,
   type Game,
   type Pack,
@@ -20,6 +22,7 @@ import {
   addAdminByEmail,
   listAdminInvites,
   listAdmins,
+  listClients,
   removeAdmin,
 } from "@/lib/admin.functions";
 
@@ -37,7 +40,15 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-const TABS = ["Games", "Packages", "Banners", "Orders", "Admins"] as const;
+const TABS = [
+  "Games",
+  "Packages",
+  "Banners",
+  "Orders",
+  "Clients",
+  "Discount",
+  "Admins",
+] as const;
 type Tab = (typeof TABS)[number];
 
 const field =
@@ -92,6 +103,8 @@ function AdminPage() {
         {tab === "Packages" && <PackagesTab />}
         {tab === "Banners" && <BannersTab />}
         {tab === "Orders" && <OrdersTab />}
+        {tab === "Clients" && <ClientsTab />}
+        {tab === "Discount" && <DiscountTab />}
         {tab === "Admins" && <AdminsTab />}
       </div>
     </div>
