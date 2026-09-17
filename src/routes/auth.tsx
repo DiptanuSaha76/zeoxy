@@ -120,17 +120,6 @@ function AuthPage() {
     goNext();
   }
 
-  async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Google sign-in failed");
-      return;
-    }
-    if (result.redirected) return;
-    goNext();
-  }
 
   const field =
     "glass-panel w-full rounded-2xl px-3.5 py-3 text-sm outline-none placeholder:text-faint focus:border-violet/50";
