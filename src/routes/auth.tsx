@@ -82,6 +82,7 @@ function AuthPage() {
       toast.error("Wrong username / number or password");
       return;
     }
+    await supabase.rpc("ensure_profile");
     goNext();
   }
 
@@ -114,6 +115,7 @@ function AuthPage() {
       );
       return;
     }
+    await supabase.rpc("ensure_profile");
     toast.success("Account created — you're signed in");
     goNext();
   }
