@@ -50,7 +50,9 @@ function TopUpPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  const { data: games = [] } = useQuery(gamesQuery());
+  const { data: games = [], isLoading: gamesLoading } = useQuery(gamesQuery());
+  const { data: settings } = useQuery(settingsQuery());
+  const percent = settings?.discount_percent ?? 0;
   const game = games.find((g) => g.slug === slug);
   const { data: packs = [] } = useQuery({
     ...packsQuery(game?.id),
@@ -89,7 +91,7 @@ function TopUpPage() {
       package_id: pack.id,
       player_ref: playerRef.trim(),
       player_server: game.requires_server_id ? playerServer.trim() : null,
-      amount: pack.price,
+      amount: discounted(pack.price, percent),
     });
     setSubmitting(false);
     if (error) {
