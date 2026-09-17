@@ -62,7 +62,7 @@ function TopUpPage() {
 
   useEffect(() => {
     if (!selected && packs.length) {
-      setSelected(packs.find((p) => p.is_popular)?.id ?? packs[0].id);
+      setSelected(packs.find((p) => p.is_popular)?.id ?? packs[0]!.id);
     }
   }, [packs, selected]);
 
