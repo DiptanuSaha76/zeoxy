@@ -560,7 +560,10 @@ function AdminsTab() {
   }
 
   async function add() {
-    if (!value.trim()) return toast.error("Enter a username or email");
+    if (!value.trim()) {
+      toast.error("Enter a username or email");
+      return;
+    }
     setBusy(true);
     try {
       const res = await addFn({ data: { email: toEmail(value) } });
