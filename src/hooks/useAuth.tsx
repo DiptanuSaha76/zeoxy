@@ -19,28 +19,34 @@ export function useAuth() {
   }, []);
 
   const user: User | null = session?.user ?? null;
+  const userId = user?.id ?? null;
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setIsAdmin(false);
+      setRoleLoading(false);
       return;
     }
     let cancelled = false;
+    setRoleLoading(true);
     void (async () => {
       await supabase.rpc("ensure_profile");
       const { data } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("role", "admin")
         .maybeSingle();
-      if (!cancelled) setIsAdmin(Boolean(data));
+      if (!cancelled) {
+        setIsAdmin(Boolean(data));
+        setRoleLoading(false);
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
-  return { session, user, isAdmin, loading };
+  return { session, user, isAdmin, loading, roleLoading, ready: !loading && !roleLoading };
 }
