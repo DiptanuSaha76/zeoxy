@@ -23,13 +23,13 @@ export function useAuth() {
   const userId = user?.id ?? null;
 
   useEffect(() => {
+    if (loading) return;
     if (!userId) {
       setIsAdmin(false);
-      setRoleLoading(false);
+      setCheckedFor(null);
       return;
     }
     let cancelled = false;
-    setRoleLoading(true);
     void (async () => {
       await supabase.rpc("ensure_profile");
       const { data } = await supabase
@@ -40,14 +40,16 @@ export function useAuth() {
         .maybeSingle();
       if (!cancelled) {
         setIsAdmin(Boolean(data));
-        setRoleLoading(false);
+        setCheckedFor(userId);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, loading]);
+
+  const roleLoading = checkedFor !== userId;
 
   return { session, user, isAdmin, loading, roleLoading, ready: !loading && !roleLoading };
 }
