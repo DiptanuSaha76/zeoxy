@@ -48,7 +48,24 @@ function Home() {
 
       <section className="mt-4 px-4 sm:px-6">
         <div className="glass-panel overflow-hidden rounded-3xl p-2">
-          <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-muted sm:aspect-[21/8]">
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Tap right for next banner, left for previous"
+            onClick={(e) => {
+              if (banners.length < 2) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const next = e.clientX - rect.left > rect.width / 2;
+              setSlide((s) => (s + (next ? 1 : banners.length - 1)) % banners.length);
+            }}
+            onKeyDown={(e) => {
+              if (banners.length < 2) return;
+              if (e.key === "ArrowRight") setSlide((s) => (s + 1) % banners.length);
+              if (e.key === "ArrowLeft") setSlide((s) => (s + banners.length - 1) % banners.length);
+            }}
+            className="relative aspect-[16/10] cursor-pointer select-none overflow-hidden rounded-2xl bg-muted sm:aspect-[21/8]"
+          >
+
             {active?.image_url ? (
               <img
                 src={active.image_url}
@@ -74,6 +91,7 @@ function Home() {
                 <Link
                   to="/topup/$slug"
                   params={{ slug: bannerGame.slug }}
+                  onClick={(e) => e.stopPropagation()}
                   className="brand-gradient mt-3 inline-block rounded-xl px-6 py-2.5 text-center font-display text-sm font-semibold text-ink"
                 >
                   Top Up

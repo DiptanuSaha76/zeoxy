@@ -38,6 +38,34 @@ export const listAdminInvites = createServerFn({ method: "GET" })
     return (data ?? []).map((i) => ({ ...i, email: i.email.toLowerCase() }));
   });
 
+export const listClients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await requireAdmin(supabase as any, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: profiles, error: profErr }, { data: orders, error: ordErr }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, display_name, username, phone, created_at"),
+      supabaseAdmin.from("orders").select("user_id, amount, status"),
+    ]);
+    if (profErr) throw profErr;
+    if (ordErr) throw ordErr;
+    return (profiles ?? []).map((p) => {
+      const mine = (orders ?? []).filter((o) => o.user_id === p.id);
+      return {
+        id: p.id,
+        username: p.username ?? "",
+        display_name: p.display_name ?? "",
+        phone: p.phone ?? "",
+        created_at: p.created_at,
+        orders: mine.length,
+        spent: mine
+          .filter((o) => o.status === "completed")
+          .reduce((sum, o) => sum + Number(o.amount), 0),
+      };
+    });
+  });
+
 const addAdminSchema = z.object({ email: z.string().email() });
 
 export const addAdminByEmail = createServerFn({ method: "POST" })

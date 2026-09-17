@@ -111,6 +111,38 @@ export const ordersQuery = (scope: "mine" | "all", userId?: string) =>
     },
   });
 
+export const settingsQuery = () =>
+  queryOptions({
+    queryKey: ["site-settings"],
+    queryFn: async (): Promise<{ discount_percent: number }> => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("discount_percent")
+        .maybeSingle();
+      if (error) throw error;
+      return { discount_percent: Number(data?.discount_percent ?? 0) };
+    },
+  });
+
+export const discounted = (price: number, percent: number) => {
+  const pct = Math.min(Math.max(Number(percent) || 0, 0), 100);
+  return Math.round(price * (1 - pct / 100));
+};
+
+export async function uploadGameImage(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("game-images")
+    .upload(path, file, { cacheControl: "31536000", upsert: false });
+  if (error) throw error;
+  const { data, error: signErr } = await supabase.storage
+    .from("game-images")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signErr || !data?.signedUrl) throw signErr ?? new Error("Could not read the uploaded image");
+  return data.signedUrl;
+}
+
 export const money = (value: number) =>
   `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
