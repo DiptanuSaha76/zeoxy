@@ -100,7 +100,24 @@ function AdminPage() {
 
 /* ---------------- Games ---------------- */
 
-const emptyGame = {
+type GameForm = {
+  name: string;
+  slug: string;
+  category: string;
+  cover_url: string;
+  currency_label: string;
+  id_label: string;
+  id_kind: string;
+  id_min_len: string;
+  id_max_len: string;
+  id_help: string;
+  requires_server_id: boolean;
+  server_label: string;
+  is_active: boolean;
+  sort_order: string;
+};
+
+const emptyGame: GameForm = {
   name: "",
   slug: "",
   category: "Mobile",
@@ -108,26 +125,38 @@ const emptyGame = {
   currency_label: "Gems",
   id_label: "Player ID",
   id_kind: "text",
-  id_min_len: 3,
-  id_max_len: 40,
+  id_min_len: "3",
+  id_max_len: "40",
   id_help: "",
   requires_server_id: false,
   server_label: "Server / Zone ID",
   is_active: true,
-  sort_order: 0,
+  sort_order: "0",
 };
 
 function GamesTab() {
   const qc = useQueryClient();
   const { data: games = [] } = useQuery(gamesQuery({ includeInactive: true }));
-  const [form, setForm] = useState<Record<string, any>>({ ...emptyGame });
+  const [form, setForm] = useState<GameForm>({ ...emptyGame });
   const [editing, setEditing] = useState<string | null>(null);
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof GameForm>(k: K, v: GameForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function save() {
-    if (!form.name?.trim() || !form.slug?.trim()) return toast.error("Name and slug are required");
+    if (!form.name.trim() || !form.slug.trim()) {
+      toast.error("Name and slug are required");
+      return;
+    }
     const payload = {
-      ...form,
+      name: form.name.trim(),
+      slug: form.slug.trim(),
+      category: form.category,
+      currency_label: form.currency_label,
+      id_label: form.id_label,
+      id_kind: form.id_kind,
+      server_label: form.server_label,
+      requires_server_id: form.requires_server_id,
+      is_active: form.is_active,
       cover_url: form.cover_url || null,
       id_help: form.id_help || null,
       id_min_len: Number(form.id_min_len) || 1,
@@ -137,7 +166,10 @@ function GamesTab() {
     const { error } = editing
       ? await supabase.from("games").update(payload).eq("id", editing)
       : await supabase.from("games").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(editing ? "Game updated" : "Game added");
     setForm({ ...emptyGame });
     setEditing(null);
@@ -146,7 +178,22 @@ function GamesTab() {
 
   function edit(g: Game) {
     setEditing(g.id);
-    setForm({ ...g, cover_url: g.cover_url ?? "", id_help: g.id_help ?? "" });
+    setForm({
+      name: g.name,
+      slug: g.slug,
+      category: g.category,
+      cover_url: g.cover_url ?? "",
+      currency_label: g.currency_label,
+      id_label: g.id_label,
+      id_kind: g.id_kind,
+      id_min_len: String(g.id_min_len),
+      id_max_len: String(g.id_max_len),
+      id_help: g.id_help ?? "",
+      requires_server_id: g.requires_server_id,
+      server_label: g.server_label,
+      is_active: g.is_active,
+      sort_order: String(g.sort_order),
+    });
   }
 
   return (
@@ -200,6 +247,7 @@ function GamesTab() {
     </div>
   );
 }
+
 
 /* ---------------- Packages ---------------- */
 
