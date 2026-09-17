@@ -727,3 +727,144 @@ function AdminsTab() {
     </div>
   );
 }
+
+/* ---------------- Clients ---------------- */
+
+function ClientsTab() {
+  const clientsFn = useServerFn(listClients);
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => clientsFn({}),
+  });
+  const [q, setQ] = useState("");
+
+  const rows = data.filter((c) => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return true;
+    return (
+      c.username.toLowerCase().includes(needle) ||
+      c.display_name.toLowerCase().includes(needle) ||
+      c.phone.includes(needle)
+    );
+  });
+
+  if (isLoading) return <p className="text-sm text-faint">Loading clients…</p>;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <input
+          className={`${field} sm:max-w-xs`}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search username or number"
+        />
+        <p className="text-[11px] text-faint">{rows.length} client{rows.length === 1 ? "" : "s"}</p>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="text-sm text-faint">No clients found.</p>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((c) => (
+            <div
+              key={c.id}
+              className="glass-panel flex flex-wrap items-center justify-between gap-3 rounded-2xl p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-display text-sm font-semibold">
+                  {c.username || c.display_name || "Unnamed"}
+                </p>
+                <p className="truncate text-[11px] text-faint">
+                  {c.phone ? c.phone : "No number"} · joined{" "}
+                  {new Date(c.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="text-right text-[11px] text-faint">
+                <p className="font-display text-sm font-semibold text-ink">{money(c.spent)}</p>
+                <p>
+                  {c.orders} order{c.orders === 1 ? "" : "s"}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Discount ---------------- */
+
+function DiscountTab() {
+  const qc = useQueryClient();
+  const { data: settings } = useQuery(settingsQuery());
+  const [value, setValue] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (settings) setValue(String(settings.discount_percent));
+  }, [settings]);
+
+  const percent = Math.min(Math.max(Number(value) || 0, 0), 100);
+
+  async function save() {
+    if (Number(value) < 0 || Number(value) > 100 || Number.isNaN(Number(value))) {
+      toast.error("Enter a number between 0 and 100");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert({ id: true, discount_percent: percent }, { onConflict: "id" });
+    setSaving(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(percent ? `${percent}% off applied site-wide` : "Discount turned off");
+    qc.invalidateQueries({ queryKey: ["site-settings"] });
+  }
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="glass-panel rounded-2xl p-4">
+        <p className="font-display text-sm font-semibold">Global discount</p>
+        <p className="mt-1 text-[11px] text-faint">
+          Applies to every recharge pack across the whole site. Set 0 to turn it off.
+        </p>
+        <label className="mt-3 block">
+          <Label>Discount %</Label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            className={field}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </label>
+        <button className={`${primary} mt-4`} disabled={saving} onClick={save}>
+          {saving ? "Saving…" : "Save discount"}
+        </button>
+      </div>
+
+      <div className="glass-panel rounded-2xl p-4">
+        <p className="font-display text-sm font-semibold">Preview</p>
+        <div className="mt-3 space-y-2 text-sm">
+          {[199, 499, 999].map((p) => (
+            <div key={p} className="flex items-center justify-between">
+              <span className="text-faint line-through">{money(p)}</span>
+              <span className="font-display font-semibold">
+                {money(Math.round(p * (1 - percent / 100)))}
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] text-faint">
+          Currently live: {settings?.discount_percent ?? 0}% off
+        </p>
+      </div>
+    </div>
+  );
+}
