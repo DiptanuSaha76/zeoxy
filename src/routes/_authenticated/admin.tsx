@@ -51,16 +51,16 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 function AdminPage() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, ready } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("Games");
 
   useEffect(() => {
-    if (!loading && user && !isAdmin) {
+    if (ready && user && !isAdmin) {
       toast.error("Admins only");
       navigate({ to: "/", replace: true });
     }
-  }, [loading, user, isAdmin, navigate]);
+  }, [ready, user, isAdmin, navigate]);
 
   if (!isAdmin) {
     return <p className="px-5 py-10 text-sm text-faint">Checking admin access…</p>;
