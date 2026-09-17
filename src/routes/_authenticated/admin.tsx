@@ -263,17 +263,33 @@ function PackagesTab() {
     enabled: Boolean(gameId),
   });
 
-  const empty = { label: "", amount: 0, price: 0, bonus_text: "", is_popular: false, is_active: true, sort_order: 0 };
-  const [form, setForm] = useState<Record<string, any>>({ ...empty });
+  type PackForm = {
+    label: string;
+    amount: string;
+    price: string;
+    bonus_text: string;
+    is_popular: boolean;
+    is_active: boolean;
+    sort_order: string;
+  };
+  const empty: PackForm = { label: "", amount: "0", price: "0", bonus_text: "", is_popular: false, is_active: true, sort_order: "0" };
+  const [form, setForm] = useState<PackForm>({ ...empty });
   const [editing, setEditing] = useState<string | null>(null);
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof PackForm>(k: K, v: PackForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function save() {
-    if (!gameId) return toast.error("Pick a game first");
-    if (!form.label?.trim()) return toast.error("Label is required");
+    if (!gameId) {
+      toast.error("Pick a game first");
+      return;
+    }
+    if (!form.label.trim()) {
+      toast.error("Label is required");
+      return;
+    }
     const payload = {
       game_id: gameId,
-      label: form.label,
+      label: form.label.trim(),
       amount: Number(form.amount) || 0,
       price: Number(form.price) || 0,
       bonus_text: form.bonus_text || null,
@@ -284,7 +300,10 @@ function PackagesTab() {
     const { error } = editing
       ? await supabase.from("packages").update(payload).eq("id", editing)
       : await supabase.from("packages").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(editing ? "Package updated" : "Package added");
     setForm({ ...empty });
     setEditing(null);
@@ -293,14 +312,26 @@ function PackagesTab() {
 
   async function remove(id: string) {
     const { error } = await supabase.from("packages").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["packages"] });
   }
 
   function edit(p: Pack) {
     setEditing(p.id);
-    setForm({ ...p, bonus_text: p.bonus_text ?? "" });
+    setForm({
+      label: p.label,
+      amount: String(p.amount),
+      price: String(p.price),
+      bonus_text: p.bonus_text ?? "",
+      is_popular: p.is_popular,
+      is_active: p.is_active,
+      sort_order: String(p.sort_order),
+    });
   }
+
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr] lg:items-start">
