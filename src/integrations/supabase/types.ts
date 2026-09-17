@@ -254,16 +254,22 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          phone: string | null
+          username: string | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           id: string
+          phone?: string | null
+          username?: string | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
           id?: string
+          phone?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -297,6 +303,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      login_email: { Args: { _identifier: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
