@@ -83,9 +83,9 @@ export const addAdminByEmail = createServerFn({ method: "POST" })
     if (listErr) throw listErr;
     const existing = list.users?.find((u) => (u.email ?? "").toLowerCase() === email);
     if (existing) {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from("user_roles")
-        .insert({ user_id: existing.id, role: "admin" });
+        .upsert({ user_id: existing.id, role: "admin" }, { onConflict: "user_id,role" });
       if (error) throw error;
       return { created: true, invite: false };
     }
