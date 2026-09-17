@@ -9,6 +9,12 @@ export type Game = {
   cover_url: string | null;
   currency_label: string;
   id_label: string;
+  id_kind: "text" | "numeric";
+  id_min_len: number;
+  id_max_len: number;
+  id_help: string | null;
+  requires_server_id: boolean;
+  server_label: string;
   is_active: boolean;
   sort_order: number;
 };
@@ -35,6 +41,20 @@ export type Pack = {
   is_active: boolean;
   sort_order: number;
 };
+
+export type Order = {
+  id: string;
+  player_ref: string;
+  player_server: string | null;
+  amount: number;
+  status: string;
+  created_at: string;
+  game_id: string | null;
+  package_id: string | null;
+  user_id?: string | null;
+};
+
+export const ORDER_STATUSES = ["pending", "processing", "completed", "failed"] as const;
 
 export const gamesQuery = (opts?: { includeInactive?: boolean }) =>
   queryOptions({
@@ -76,18 +96,40 @@ export const packsQuery = (gameId?: string, opts?: { includeInactive?: boolean }
 export const ordersQuery = (scope: "mine" | "all", userId?: string) =>
   queryOptions({
     queryKey: ["orders", scope, userId ?? "anon"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Order[]> => {
       let q = supabase
         .from("orders")
-        .select("id, player_ref, amount, status, created_at, game_id, package_id")
+        .select(
+          "id, player_ref, player_server, amount, status, created_at, game_id, package_id, user_id",
+        )
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(200);
       if (scope === "mine" && userId) q = q.eq("user_id", userId);
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((o) => ({ ...o, amount: Number(o.amount) })) as Order[];
     },
   });
 
 export const money = (value: number) =>
   `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+export function validatePlayerId(game: Game, value: string): string | null {
+  const v = value.trim();
+  if (!v) return `Enter your ${game.id_label}`;
+  if (game.id_kind === "numeric" && !/^\d+$/.test(v))
+    return `${game.id_label} must contain digits only`;
+  if (v.length < game.id_min_len)
+    return `${game.id_label} must be at least ${game.id_min_len} characters`;
+  if (v.length > game.id_max_len)
+    return `${game.id_label} must be at most ${game.id_max_len} characters`;
+  return null;
+}
+
+export function validateServerId(game: Game, value: string): string | null {
+  if (!game.requires_server_id) return null;
+  const v = value.trim();
+  if (!v) return `Enter your ${game.server_label}`;
+  if (v.length > 20) return `${game.server_label} is too long`;
+  return null;
+}
