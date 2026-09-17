@@ -1,4 +1,0 @@
-CREATE POLICY "game images admin write" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'game-images' AND has_role(auth.uid(), 'admin'::app_role));
-CREATE POLICY "game images admin update" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'game-images' AND has_role(auth.uid(), 'admin'::app_role)) WITH CHECK (bucket_id = 'game-images' AND has_role(auth.uid(), 'admin'::app_role));
-CREATE POLICY "game images admin delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'game-images' AND has_role(auth.uid(), 'admin'::app_role));
-CREATE POLICY "game images read" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'game-images');
