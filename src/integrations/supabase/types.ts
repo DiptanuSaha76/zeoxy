@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           badge: string | null
@@ -68,9 +92,15 @@ export type Database = {
           created_at: string
           currency_label: string
           id: string
+          id_help: string | null
+          id_kind: string
           id_label: string
+          id_max_len: number
+          id_min_len: number
           is_active: boolean
           name: string
+          requires_server_id: boolean
+          server_label: string
           slug: string
           sort_order: number
           updated_at: string
@@ -81,9 +111,15 @@ export type Database = {
           created_at?: string
           currency_label?: string
           id?: string
+          id_help?: string | null
+          id_kind?: string
           id_label?: string
+          id_max_len?: number
+          id_min_len?: number
           is_active?: boolean
           name: string
+          requires_server_id?: boolean
+          server_label?: string
           slug: string
           sort_order?: number
           updated_at?: string
@@ -94,9 +130,15 @@ export type Database = {
           created_at?: string
           currency_label?: string
           id?: string
+          id_help?: string | null
+          id_kind?: string
           id_label?: string
+          id_max_len?: number
+          id_min_len?: number
           is_active?: boolean
           name?: string
+          requires_server_id?: boolean
+          server_label?: string
           slug?: string
           sort_order?: number
           updated_at?: string
@@ -111,6 +153,7 @@ export type Database = {
           id: string
           package_id: string | null
           player_ref: string
+          player_server: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -122,6 +165,7 @@ export type Database = {
           id?: string
           package_id?: string | null
           player_ref: string
+          player_server?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -133,6 +177,7 @@ export type Database = {
           id?: string
           package_id?: string | null
           player_ref?: string
+          player_server?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
