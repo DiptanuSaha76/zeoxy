@@ -203,7 +203,12 @@ function TopUpPage() {
                     }
                   >
                     <p className="text-xs text-faint">{p.label}</p>
-                    <p className="font-display text-base font-semibold">{money(p.price)}</p>
+                    <p className="font-display text-base font-semibold">
+                      {money(discounted(p.price, percent))}
+                    </p>
+                    {percent > 0 ? (
+                      <p className="text-[10px] text-faint line-through">{money(p.price)}</p>
+                    ) : null}
                     {p.bonus_text ? (
                       <p className="text-[10px] font-medium text-lime">{p.bonus_text}</p>
                     ) : null}
@@ -222,9 +227,14 @@ function TopUpPage() {
               <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-subtle">{pack?.label ?? "Select a pack"}</span>
                 <span className="font-display font-semibold">
-                  {pack ? money(pack.price) : "—"}
+                  {pack ? money(discounted(pack.price, percent)) : "—"}
                 </span>
               </div>
+              {pack && percent > 0 ? (
+                <p className="mt-1 text-[11px] text-lime">
+                  {percent}% off applied · was {money(pack.price)}
+                </p>
+              ) : null}
               {user ? (
                 <button
                   onClick={checkout}
@@ -255,7 +265,9 @@ function TopUpPage() {
           </section>
         </div>
       ) : (
-        <p className="mt-8 px-4 text-sm text-subtle sm:px-6">Loading game…</p>
+        <p className="mt-8 px-4 text-sm text-subtle sm:px-6">
+          {gamesLoading ? "Loading game…" : "This game is not available right now."}
+        </p>
       )}
     </PageShell>
   );
