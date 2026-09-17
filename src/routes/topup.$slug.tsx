@@ -6,9 +6,11 @@ import { z } from "zod";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import {
+  discounted,
   gamesQuery,
   money,
   packsQuery,
+  settingsQuery,
   validatePlayerId,
   validateServerId,
 } from "@/lib/store";
