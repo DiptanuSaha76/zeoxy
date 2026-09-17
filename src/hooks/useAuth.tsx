@@ -6,6 +6,7 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [checkedFor, setCheckedFor] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
@@ -19,10 +20,13 @@ export function useAuth() {
   }, []);
 
   const user: User | null = session?.user ?? null;
+  const userId = user?.id ?? null;
 
   useEffect(() => {
-    if (!user) {
+    if (loading) return;
+    if (!userId) {
       setIsAdmin(false);
+      setCheckedFor(null);
       return;
     }
     let cancelled = false;
@@ -31,16 +35,21 @@ export function useAuth() {
       const { data } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .eq("role", "admin")
         .maybeSingle();
-      if (!cancelled) setIsAdmin(Boolean(data));
+      if (!cancelled) {
+        setIsAdmin(Boolean(data));
+        setCheckedFor(userId);
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId, loading]);
 
-  return { session, user, isAdmin, loading };
+  const roleLoading = checkedFor !== userId;
+
+  return { session, user, isAdmin, loading, roleLoading, ready: !loading && !roleLoading };
 }
