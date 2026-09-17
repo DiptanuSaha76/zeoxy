@@ -91,6 +91,7 @@ function Home() {
                 <Link
                   to="/topup/$slug"
                   params={{ slug: bannerGame.slug }}
+                  onClick={(e) => e.stopPropagation()}
                   className="brand-gradient mt-3 inline-block rounded-xl px-6 py-2.5 text-center font-display text-sm font-semibold text-ink"
                 >
                   Top Up
