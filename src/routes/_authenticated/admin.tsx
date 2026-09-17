@@ -100,7 +100,24 @@ function AdminPage() {
 
 /* ---------------- Games ---------------- */
 
-const emptyGame = {
+type GameForm = {
+  name: string;
+  slug: string;
+  category: string;
+  cover_url: string;
+  currency_label: string;
+  id_label: string;
+  id_kind: string;
+  id_min_len: string;
+  id_max_len: string;
+  id_help: string;
+  requires_server_id: boolean;
+  server_label: string;
+  is_active: boolean;
+  sort_order: string;
+};
+
+const emptyGame: GameForm = {
   name: "",
   slug: "",
   category: "Mobile",
@@ -108,26 +125,38 @@ const emptyGame = {
   currency_label: "Gems",
   id_label: "Player ID",
   id_kind: "text",
-  id_min_len: 3,
-  id_max_len: 40,
+  id_min_len: "3",
+  id_max_len: "40",
   id_help: "",
   requires_server_id: false,
   server_label: "Server / Zone ID",
   is_active: true,
-  sort_order: 0,
+  sort_order: "0",
 };
 
 function GamesTab() {
   const qc = useQueryClient();
   const { data: games = [] } = useQuery(gamesQuery({ includeInactive: true }));
-  const [form, setForm] = useState<Record<string, any>>({ ...emptyGame });
+  const [form, setForm] = useState<GameForm>({ ...emptyGame });
   const [editing, setEditing] = useState<string | null>(null);
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof GameForm>(k: K, v: GameForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function save() {
-    if (!form.name?.trim() || !form.slug?.trim()) return toast.error("Name and slug are required");
+    if (!form.name.trim() || !form.slug.trim()) {
+      toast.error("Name and slug are required");
+      return;
+    }
     const payload = {
-      ...form,
+      name: form.name.trim(),
+      slug: form.slug.trim(),
+      category: form.category,
+      currency_label: form.currency_label,
+      id_label: form.id_label,
+      id_kind: form.id_kind,
+      server_label: form.server_label,
+      requires_server_id: form.requires_server_id,
+      is_active: form.is_active,
       cover_url: form.cover_url || null,
       id_help: form.id_help || null,
       id_min_len: Number(form.id_min_len) || 1,
@@ -137,7 +166,10 @@ function GamesTab() {
     const { error } = editing
       ? await supabase.from("games").update(payload).eq("id", editing)
       : await supabase.from("games").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(editing ? "Game updated" : "Game added");
     setForm({ ...emptyGame });
     setEditing(null);
@@ -146,7 +178,22 @@ function GamesTab() {
 
   function edit(g: Game) {
     setEditing(g.id);
-    setForm({ ...g, cover_url: g.cover_url ?? "", id_help: g.id_help ?? "" });
+    setForm({
+      name: g.name,
+      slug: g.slug,
+      category: g.category,
+      cover_url: g.cover_url ?? "",
+      currency_label: g.currency_label,
+      id_label: g.id_label,
+      id_kind: g.id_kind,
+      id_min_len: String(g.id_min_len),
+      id_max_len: String(g.id_max_len),
+      id_help: g.id_help ?? "",
+      requires_server_id: g.requires_server_id,
+      server_label: g.server_label,
+      is_active: g.is_active,
+      sort_order: String(g.sort_order),
+    });
   }
 
   return (
@@ -201,6 +248,7 @@ function GamesTab() {
   );
 }
 
+
 /* ---------------- Packages ---------------- */
 
 function PackagesTab() {
@@ -215,17 +263,33 @@ function PackagesTab() {
     enabled: Boolean(gameId),
   });
 
-  const empty = { label: "", amount: 0, price: 0, bonus_text: "", is_popular: false, is_active: true, sort_order: 0 };
-  const [form, setForm] = useState<Record<string, any>>({ ...empty });
+  type PackForm = {
+    label: string;
+    amount: string;
+    price: string;
+    bonus_text: string;
+    is_popular: boolean;
+    is_active: boolean;
+    sort_order: string;
+  };
+  const empty: PackForm = { label: "", amount: "0", price: "0", bonus_text: "", is_popular: false, is_active: true, sort_order: "0" };
+  const [form, setForm] = useState<PackForm>({ ...empty });
   const [editing, setEditing] = useState<string | null>(null);
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof PackForm>(k: K, v: PackForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function save() {
-    if (!gameId) return toast.error("Pick a game first");
-    if (!form.label?.trim()) return toast.error("Label is required");
+    if (!gameId) {
+      toast.error("Pick a game first");
+      return;
+    }
+    if (!form.label.trim()) {
+      toast.error("Label is required");
+      return;
+    }
     const payload = {
       game_id: gameId,
-      label: form.label,
+      label: form.label.trim(),
       amount: Number(form.amount) || 0,
       price: Number(form.price) || 0,
       bonus_text: form.bonus_text || null,
@@ -236,7 +300,10 @@ function PackagesTab() {
     const { error } = editing
       ? await supabase.from("packages").update(payload).eq("id", editing)
       : await supabase.from("packages").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(editing ? "Package updated" : "Package added");
     setForm({ ...empty });
     setEditing(null);
@@ -245,14 +312,26 @@ function PackagesTab() {
 
   async function remove(id: string) {
     const { error } = await supabase.from("packages").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["packages"] });
   }
 
   function edit(p: Pack) {
     setEditing(p.id);
-    setForm({ ...p, bonus_text: p.bonus_text ?? "" });
+    setForm({
+      label: p.label,
+      amount: String(p.amount),
+      price: String(p.price),
+      bonus_text: p.bonus_text ?? "",
+      is_popular: p.is_popular,
+      is_active: p.is_active,
+      sort_order: String(p.sort_order),
+    });
   }
+
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr] lg:items-start">
@@ -301,15 +380,28 @@ function BannersTab() {
   const qc = useQueryClient();
   const { data: banners = [] } = useQuery(bannersQuery({ includeInactive: true }));
   const { data: games = [] } = useQuery(gamesQuery({ includeInactive: true }));
-  const empty = { title: "", subtitle: "", badge: "Featured", image_url: "", game_id: "", is_active: true, sort_order: 0 };
-  const [form, setForm] = useState<Record<string, any>>({ ...empty });
+  type BannerForm = {
+    title: string;
+    subtitle: string;
+    badge: string;
+    image_url: string;
+    game_id: string;
+    is_active: boolean;
+    sort_order: string;
+  };
+  const empty: BannerForm = { title: "", subtitle: "", badge: "Featured", image_url: "", game_id: "", is_active: true, sort_order: "0" };
+  const [form, setForm] = useState<BannerForm>({ ...empty });
   const [editing, setEditing] = useState<string | null>(null);
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof BannerForm>(k: K, v: BannerForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function save() {
-    if (!form.title?.trim()) return toast.error("Title is required");
+    if (!form.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
     const payload = {
-      title: form.title,
+      title: form.title.trim(),
       subtitle: form.subtitle || null,
       badge: form.badge || null,
       image_url: form.image_url || null,
@@ -320,7 +412,10 @@ function BannersTab() {
     const { error } = editing
       ? await supabase.from("banners").update(payload).eq("id", editing)
       : await supabase.from("banners").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(editing ? "Banner updated" : "Banner added");
     setForm({ ...empty });
     setEditing(null);
@@ -329,20 +424,26 @@ function BannersTab() {
 
   async function remove(id: string) {
     const { error } = await supabase.from("banners").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["banners"] });
   }
 
   function edit(b: Banner) {
     setEditing(b.id);
     setForm({
-      ...b,
+      title: b.title,
       subtitle: b.subtitle ?? "",
       badge: b.badge ?? "",
       image_url: b.image_url ?? "",
       game_id: b.game_id ?? "",
+      is_active: b.is_active,
+      sort_order: String(b.sort_order),
     });
   }
+
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr] lg:items-start">
@@ -396,7 +497,10 @@ function OrdersTab() {
 
   async function setStatus(id: string, status: string) {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Order updated");
     qc.invalidateQueries({ queryKey: ["orders"] });
   }
@@ -456,7 +560,10 @@ function AdminsTab() {
   }
 
   async function add() {
-    if (!value.trim()) return toast.error("Enter a username or email");
+    if (!value.trim()) {
+      toast.error("Enter a username or email");
+      return;
+    }
     setBusy(true);
     try {
       const res = await addFn({ data: { email: toEmail(value) } });

@@ -26,15 +26,17 @@ export function useAuth() {
       return;
     }
     let cancelled = false;
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!cancelled) setIsAdmin(Boolean(data));
-      });
+    void (async () => {
+      await supabase.rpc("ensure_profile");
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!cancelled) setIsAdmin(Boolean(data));
+    })();
+
     return () => {
       cancelled = true;
     };
