@@ -380,15 +380,28 @@ function BannersTab() {
   const qc = useQueryClient();
   const { data: banners = [] } = useQuery(bannersQuery({ includeInactive: true }));
   const { data: games = [] } = useQuery(gamesQuery({ includeInactive: true }));
-  const empty = { title: "", subtitle: "", badge: "Featured", image_url: "", game_id: "", is_active: true, sort_order: 0 };
-  const [form, setForm] = useState<Record<string, any>>({ ...empty });
+  type BannerForm = {
+    title: string;
+    subtitle: string;
+    badge: string;
+    image_url: string;
+    game_id: string;
+    is_active: boolean;
+    sort_order: string;
+  };
+  const empty: BannerForm = { title: "", subtitle: "", badge: "Featured", image_url: "", game_id: "", is_active: true, sort_order: "0" };
+  const [form, setForm] = useState<BannerForm>({ ...empty });
   const [editing, setEditing] = useState<string | null>(null);
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof BannerForm>(k: K, v: BannerForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function save() {
-    if (!form.title?.trim()) return toast.error("Title is required");
+    if (!form.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
     const payload = {
-      title: form.title,
+      title: form.title.trim(),
       subtitle: form.subtitle || null,
       badge: form.badge || null,
       image_url: form.image_url || null,
@@ -399,7 +412,10 @@ function BannersTab() {
     const { error } = editing
       ? await supabase.from("banners").update(payload).eq("id", editing)
       : await supabase.from("banners").insert(payload);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(editing ? "Banner updated" : "Banner added");
     setForm({ ...empty });
     setEditing(null);
@@ -408,20 +424,26 @@ function BannersTab() {
 
   async function remove(id: string) {
     const { error } = await supabase.from("banners").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["banners"] });
   }
 
   function edit(b: Banner) {
     setEditing(b.id);
     setForm({
-      ...b,
+      title: b.title,
       subtitle: b.subtitle ?? "",
       badge: b.badge ?? "",
       image_url: b.image_url ?? "",
       game_id: b.game_id ?? "",
+      is_active: b.is_active,
+      sort_order: String(b.sort_order),
     });
   }
+
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr] lg:items-start">
