@@ -190,7 +190,7 @@ export const settingsQuery = () =>
 
 export const discounted = (price: number, percent: number) => {
   const pct = Math.min(Math.max(Number(percent) || 0, 0), 100);
-  return Math.round(price * (1 - pct / 100));
+  return round2(price * (1 - pct / 100));
 };
 
 export async function uploadGameImage(file: File): Promise<string> {
