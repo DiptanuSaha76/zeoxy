@@ -207,8 +207,16 @@ export async function uploadStoreImage(file: File): Promise<string> {
   return data.signedUrl;
 }
 
-export const money = (value: number) =>
-  `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+export const uploadGameImage = uploadStoreImage;
+
+export const money = (value: number) => {
+  const n = Number(value) || 0;
+  const decimals = Number.isInteger(round2(n)) ? 0 : 2;
+  return `Rs. ${round2(n).toLocaleString("en-IN", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
+};
 
 export function validatePlayerId(game: Game, value: string): string | null {
   const v = value.trim();
