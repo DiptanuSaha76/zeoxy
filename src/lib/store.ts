@@ -36,6 +36,7 @@ export type Pack = {
   label: string;
   amount: number;
   price: number;
+  smile_coin_cost: number;
   bonus_text: string | null;
   is_popular: boolean;
   is_active: boolean;
@@ -52,6 +53,12 @@ export type Order = {
   game_id: string | null;
   package_id: string | null;
   user_id?: string | null;
+  smile_coin_cost: number;
+  coin_rate: number;
+  real_cost: number;
+  profit_percent: number;
+  selling_price: number;
+  profit: number;
 };
 
 export const ORDER_STATUSES = ["pending", "processing", "completed", "failed"] as const;
