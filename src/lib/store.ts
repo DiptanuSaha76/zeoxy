@@ -96,7 +96,52 @@ export const packsQuery = (gameId?: string, opts?: { includeInactive?: boolean }
       if (!opts?.includeInactive) q = q.eq("is_active", true);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []).map((p) => ({ ...p, price: Number(p.price) })) as Pack[];
+      return (data ?? []).map((p) => ({
+        ...p,
+        price: Number(p.price),
+        smile_coin_cost: Number(p.smile_coin_cost ?? 0),
+      })) as Pack[];
+    },
+  });
+
+export const coinRatesQuery = () =>
+  queryOptions({
+    queryKey: ["coin-rates"],
+    queryFn: async (): Promise<CoinRate[]> => {
+      const { data, error } = await supabase
+        .from("coin_rates")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []).map((r) => ({
+        ...r,
+        money_spent: Number(r.money_spent),
+        coins_received: Number(r.coins_received),
+        coin_rate: Number(r.coin_rate),
+        profit_percent: Number(r.profit_percent),
+      })) as CoinRate[];
+    },
+  });
+
+export const activeCoinRateQuery = () =>
+  queryOptions({
+    queryKey: ["coin-rate", "active"],
+    queryFn: async (): Promise<CoinRate | null> => {
+      const { data, error } = await supabase
+        .from("coin_rates")
+        .select("*")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        ...data,
+        money_spent: Number(data.money_spent),
+        coins_received: Number(data.coins_received),
+        coin_rate: Number(data.coin_rate),
+        profit_percent: Number(data.profit_percent),
+      } as CoinRate;
     },
   });
 
