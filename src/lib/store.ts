@@ -193,7 +193,7 @@ export const discounted = (price: number, percent: number) => {
   return round2(price * (1 - pct / 100));
 };
 
-export async function uploadGameImage(file: File): Promise<string> {
+export async function uploadStoreImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const path = `${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage
