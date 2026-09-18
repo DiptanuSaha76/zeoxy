@@ -54,7 +54,13 @@ function TopUpPage() {
 
   const { data: games = [], isLoading: gamesLoading } = useQuery(gamesQuery());
   const { data: settings } = useQuery(settingsQuery());
+  const { data: rate } = useQuery(activeCoinRateQuery());
+  const placeOrder = useServerFn(createOrder);
   const percent = settings?.discount_percent ?? 0;
+  const priceOf = (p: { price: number; smile_coin_cost: number }) =>
+    customerPrice(p, rate, percent);
+  const listPriceOf = (p: { price: number; smile_coin_cost: number }) =>
+    computePricing(p, rate).selling_price;
   const game = games.find((g) => g.slug === slug);
   const { data: packs = [] } = useQuery({
     ...packsQuery(game?.id),
