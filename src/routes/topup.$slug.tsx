@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/PageShell";
 import {
-  discounted,
+  activeCoinRateQuery,
   gamesQuery,
   money,
   packsQuery,
@@ -14,8 +15,9 @@ import {
   validatePlayerId,
   validateServerId,
 } from "@/lib/store";
+import { computePricing, customerPrice } from "@/lib/pricing";
+import { createOrder } from "@/lib/orders.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const searchSchema = z.object({ pack: z.string().optional() });
 
@@ -52,7 +54,13 @@ function TopUpPage() {
 
   const { data: games = [], isLoading: gamesLoading } = useQuery(gamesQuery());
   const { data: settings } = useQuery(settingsQuery());
+  const { data: rate } = useQuery(activeCoinRateQuery());
+  const placeOrder = useServerFn(createOrder);
   const percent = settings?.discount_percent ?? 0;
+  const priceOf = (p: { price: number; smile_coin_cost: number }) =>
+    customerPrice(p, rate, percent);
+  const listPriceOf = (p: { price: number; smile_coin_cost: number }) =>
+    computePricing(p, rate).selling_price;
   const game = games.find((g) => g.slug === slug);
   const { data: packs = [] } = useQuery({
     ...packsQuery(game?.id),
@@ -85,21 +93,21 @@ function TopUpPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("orders").insert({
-      user_id: user.id,
-      game_id: game.id,
-      package_id: pack.id,
-      player_ref: playerRef.trim(),
-      player_server: game.requires_server_id ? playerServer.trim() : null,
-      amount: discounted(pack.price, percent),
-    });
-    setSubmitting(false);
-    if (error) {
+    try {
+      await placeOrder({
+        data: {
+          gameId: game.id,
+          packageId: pack.id,
+          playerRef: playerRef.trim(),
+          playerServer: game.requires_server_id ? playerServer.trim() : null,
+        },
+      });
+      toast.success("Order placed — delivery in progress");
+      navigate({ to: "/orders" });
+    } catch {
       toast.error("Could not place your order");
-      return;
     }
-    toast.success("Order placed — delivery in progress");
-    navigate({ to: "/orders" });
+    setSubmitting(false);
   }
 
   return (
@@ -204,10 +212,10 @@ function TopUpPage() {
                   >
                     <p className="text-xs text-faint">{p.label}</p>
                     <p className="font-display text-base font-semibold">
-                      {money(discounted(p.price, percent))}
+                      {money(priceOf(p))}
                     </p>
                     {percent > 0 ? (
-                      <p className="text-[10px] text-faint line-through">{money(p.price)}</p>
+                      <p className="text-[10px] text-faint line-through">{money(listPriceOf(p))}</p>
                     ) : null}
                     {p.bonus_text ? (
                       <p className="text-[10px] font-medium text-lime">{p.bonus_text}</p>
@@ -227,12 +235,12 @@ function TopUpPage() {
               <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-subtle">{pack?.label ?? "Select a pack"}</span>
                 <span className="font-display font-semibold">
-                  {pack ? money(discounted(pack.price, percent)) : "—"}
+                  {pack ? money(priceOf(pack)) : "—"}
                 </span>
               </div>
               {pack && percent > 0 ? (
                 <p className="mt-1 text-[11px] text-lime">
-                  {percent}% off applied · was {money(pack.price)}
+                  {percent}% off applied · was {money(listPriceOf(pack))}
                 </p>
               ) : null}
               {user ? (
