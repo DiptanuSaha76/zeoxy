@@ -85,6 +85,42 @@ export type Database = {
           },
         ]
       }
+      coin_rates: {
+        Row: {
+          coin_rate: number
+          coins_received: number
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          money_spent: number
+          note: string | null
+          profit_percent: number
+        }
+        Insert: {
+          coin_rate: number
+          coins_received: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          money_spent: number
+          note?: string | null
+          profit_percent?: number
+        }
+        Update: {
+          coin_rate?: number
+          coins_received?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          money_spent?: number
+          note?: string | null
+          profit_percent?: number
+        }
+        Relationships: []
+      }
       games: {
         Row: {
           category: string
@@ -148,36 +184,54 @@ export type Database = {
       orders: {
         Row: {
           amount: number
+          coin_rate: number
           created_at: string
           game_id: string | null
           id: string
           package_id: string | null
           player_ref: string
           player_server: string | null
+          profit: number
+          profit_percent: number
+          real_cost: number
+          selling_price: number
+          smile_coin_cost: number
           status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
           amount?: number
+          coin_rate?: number
           created_at?: string
           game_id?: string | null
           id?: string
           package_id?: string | null
           player_ref: string
           player_server?: string | null
+          profit?: number
+          profit_percent?: number
+          real_cost?: number
+          selling_price?: number
+          smile_coin_cost?: number
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           amount?: number
+          coin_rate?: number
           created_at?: string
           game_id?: string | null
           id?: string
           package_id?: string | null
           player_ref?: string
           player_server?: string | null
+          profit?: number
+          profit_percent?: number
+          real_cost?: number
+          selling_price?: number
+          smile_coin_cost?: number
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -210,6 +264,7 @@ export type Database = {
           is_popular: boolean
           label: string
           price: number
+          smile_coin_cost: number
           sort_order: number
           updated_at: string
         }
@@ -223,6 +278,7 @@ export type Database = {
           is_popular?: boolean
           label: string
           price?: number
+          smile_coin_cost?: number
           sort_order?: number
           updated_at?: string
         }
@@ -236,6 +292,7 @@ export type Database = {
           is_popular?: boolean
           label?: string
           price?: number
+          smile_coin_cost?: number
           sort_order?: number
           updated_at?: string
         }
