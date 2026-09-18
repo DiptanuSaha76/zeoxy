@@ -235,12 +235,12 @@ function TopUpPage() {
               <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-subtle">{pack?.label ?? "Select a pack"}</span>
                 <span className="font-display font-semibold">
-                  {pack ? money(discounted(pack.price, percent)) : "—"}
+                  {pack ? money(priceOf(pack)) : "—"}
                 </span>
               </div>
               {pack && percent > 0 ? (
                 <p className="mt-1 text-[11px] text-lime">
-                  {percent}% off applied · was {money(pack.price)}
+                  {percent}% off applied · was {money(listPriceOf(pack))}
                 </p>
               ) : null}
               {user ? (
