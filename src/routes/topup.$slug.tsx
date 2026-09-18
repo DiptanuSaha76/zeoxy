@@ -212,10 +212,10 @@ function TopUpPage() {
                   >
                     <p className="text-xs text-faint">{p.label}</p>
                     <p className="font-display text-base font-semibold">
-                      {money(discounted(p.price, percent))}
+                      {money(priceOf(p))}
                     </p>
                     {percent > 0 ? (
-                      <p className="text-[10px] text-faint line-through">{money(p.price)}</p>
+                      <p className="text-[10px] text-faint line-through">{money(listPriceOf(p))}</p>
                     ) : null}
                     {p.bonus_text ? (
                       <p className="text-[10px] font-medium text-lime">{p.bonus_text}</p>
