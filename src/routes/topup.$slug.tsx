@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/PageShell";
 import {
-  discounted,
+  activeCoinRateQuery,
   gamesQuery,
   money,
   packsQuery,
@@ -14,8 +15,9 @@ import {
   validatePlayerId,
   validateServerId,
 } from "@/lib/store";
+import { computePricing, customerPrice } from "@/lib/pricing";
+import { createOrder } from "@/lib/orders.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const searchSchema = z.object({ pack: z.string().optional() });
 
