@@ -155,14 +155,23 @@ export const ordersQuery = (scope: "mine" | "all", userId?: string) =>
       let q = supabase
         .from("orders")
         .select(
-          "id, player_ref, player_server, amount, status, created_at, game_id, package_id, user_id",
+          "id, player_ref, player_server, amount, status, created_at, game_id, package_id, user_id, smile_coin_cost, coin_rate, real_cost, profit_percent, selling_price, profit",
         )
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
       if (scope === "mine" && userId) q = q.eq("user_id", userId);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []).map((o) => ({ ...o, amount: Number(o.amount) })) as Order[];
+      return (data ?? []).map((o) => ({
+        ...o,
+        amount: Number(o.amount),
+        smile_coin_cost: Number(o.smile_coin_cost ?? 0),
+        coin_rate: Number(o.coin_rate ?? 0),
+        real_cost: Number(o.real_cost ?? 0),
+        profit_percent: Number(o.profit_percent ?? 0),
+        selling_price: Number(o.selling_price ?? 0),
+        profit: Number(o.profit ?? 0),
+      })) as Order[];
     },
   });
 
