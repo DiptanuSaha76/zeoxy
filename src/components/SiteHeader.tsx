@@ -4,8 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { HamburgerButton } from "@/components/MobileMenu";
 
-export function SiteHeader() {
+export function SiteHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { theme, toggle } = useTheme();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -20,17 +21,40 @@ export function SiteHeader() {
 
   return (
     <header className="relative z-10 flex items-center justify-between gap-3 px-4 pt-5 sm:px-6">
-      <Link to="/" className="flex items-center gap-2">
-        <div className="brand-gradient grid size-9 place-items-center rounded-xl font-display font-bold text-ink">
-          R
-        </div>
-        <div>
-          <p className="font-display text-base font-semibold leading-none tracking-tight">Recharge</p>
-          <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-faint">Instant Top-Up</p>
-        </div>
-      </Link>
+      <div className="flex items-center gap-2">
+        {/* Hamburger — mobile only */}
+        <HamburgerButton onClick={onMenuClick} />
+        <Link to="/" className="flex items-center gap-2">
+          <div className="brand-gradient grid size-9 place-items-center rounded-xl font-display font-bold text-ink">
+            R
+          </div>
+          <div>
+            <p className="font-display text-base font-semibold leading-none tracking-tight">Recharge</p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-faint">Instant Top-Up</p>
+          </div>
+        </Link>
+      </div>
 
       <div className="flex items-center gap-2">
+        {/* ...everything below is exactly your existing code... */}
+        <Link
+          to="/how-it-works"
+          className="glass-panel hidden items-center rounded-xl px-3 py-2 text-xs text-subtle sm:flex"
+        >
+          How It Works
+        </Link>
+        <Link
+          to="/contact"
+          className="glass-panel hidden items-center rounded-xl px-3 py-2 text-xs text-subtle sm:flex"
+        >
+          Contact Us
+        </Link>
+        <Link
+          to="/about"
+          className="glass-panel hidden items-center rounded-xl px-3 py-2 text-xs text-subtle sm:flex"
+        >
+          About Us
+        </Link>
         {user ? (
           <Link
             to="/orders"
@@ -70,7 +94,7 @@ export function SiteHeader() {
           <Link
             to="/auth"
             aria-label="Sign in"
-            className="glass-panel grid size-10 place-items-center rounded-xl text-subtle sm:w-auto sm:gap-2 sm:px-3"
+            className="glass grid size-10 place-items-center rounded-xl text-subtle sm:w-auto sm:gap-2 sm:px-3"
           >
             <LogIn className="size-4" />
             <span className="hidden text-xs sm:inline">Sign in</span>
@@ -104,3 +128,4 @@ export function SiteFooter() {
     </footer>
   );
 }
+
