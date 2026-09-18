@@ -93,21 +93,21 @@ function TopUpPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("orders").insert({
-      user_id: user.id,
-      game_id: game.id,
-      package_id: pack.id,
-      player_ref: playerRef.trim(),
-      player_server: game.requires_server_id ? playerServer.trim() : null,
-      amount: discounted(pack.price, percent),
-    });
-    setSubmitting(false);
-    if (error) {
+    try {
+      await placeOrder({
+        data: {
+          gameId: game.id,
+          packageId: pack.id,
+          playerRef: playerRef.trim(),
+          playerServer: game.requires_server_id ? playerServer.trim() : null,
+        },
+      });
+      toast.success("Order placed — delivery in progress");
+      navigate({ to: "/orders" });
+    } catch {
       toast.error("Could not place your order");
-      return;
     }
-    toast.success("Order placed — delivery in progress");
-    navigate({ to: "/orders" });
+    setSubmitting(false);
   }
 
   return (
